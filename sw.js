@@ -1,5 +1,5 @@
 
-const CACHE_NAME = "hello-pwa-v2";
+const CACHE_NAME = "hello-pwa-v3";
 
 const FILES = [
   "./",
@@ -12,9 +12,9 @@ const FILES = [
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(FILES);
-    })
+    caches.open(CACHE_NAME).then((cache) =>
+      cache.addAll(FILES)
+    )
   );
 
   self.skipWaiting();
@@ -38,9 +38,16 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
 
+  const url = new URL(event.request.url);
+
+  // Only cache our own application files.
+  if (url.origin !== self.location.origin) return;
+
   event.respondWith(
-    caches.match(event.request).then((response) => {
-      return response || fetch(event.request);
-    })
+    fetch(event.request).catch(() =>
+      caches.match(event.request, {
+        ignoreSearch: true
+      })
+    )
   );
 });
