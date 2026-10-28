@@ -3,66 +3,71 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-
   <meta name="viewport"
         content="width=device-width, initial-scale=1">
 
   <title>Hello World PWA</title>
-
   <meta name="theme-color" content="#ffffff">
 
   <meta name="apple-mobile-web-app-capable"
         content="yes">
-
   <meta name="apple-mobile-web-app-title"
         content="Hello PWA">
 
-  <meta name="apple-mobile-web-app-status-bar-style"
-        content="default">
-
   <link rel="manifest" href="manifest.json">
-
-  <link rel="icon"
-        type="image/svg+xml"
-        href="icon.svg">
-
-  <link rel="apple-touch-icon"
-        href="icon-180.png">
+  <link rel="icon" href="icon.svg">
+  <link rel="apple-touch-icon" href="icon-180.png">
 
   <style>
     body {
       font-family: Arial, sans-serif;
+      background: #f8fafc;
+      color: #172554;
       text-align: center;
-      padding-top: 100px;
-      background: #ffffff;
+      padding: 80px 20px;
     }
 
-    h1 {
-      color: #172554;
+    button {
+      background: #172554;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      padding: 16px 32px;
+      font-size: 18px;
+    }
+
+    #count {
+      font-size: 48px;
+      font-weight: bold;
     }
   </style>
 </head>
 
 <body>
   <h1>Hello World! 👋</h1>
-  <p>My first PWA</p>
-  <p id="status">Checking offline support...</p>
+  <p>My first interactive PWA</p>
+
+  <div id="count">0</div>
+  <button onclick="increment()">Count +1</button>
 
   <script>
+    let count = Number(
+      localStorage.getItem("count") || 0
+    );
+
+    document.getElementById("count")
+      .textContent = count;
+
+    function increment() {
+      count++;
+      localStorage.setItem("count", count);
+
+      document.getElementById("count")
+        .textContent = count;
+    }
+
     if ("serviceWorker" in navigator) {
-      window.addEventListener("load", async () => {
-        try {
-          await navigator.serviceWorker.register("./sw.js");
-
-          document.getElementById("status")
-            .textContent = "Offline support enabled!";
-        } catch (error) {
-          document.getElementById("status")
-            .textContent = "Offline setup failed.";
-
-          console.error(error);
-        }
-      });
+      navigator.serviceWorker.register("./sw.js");
     }
   </script>
 </body>
