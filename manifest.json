@@ -1,0 +1,11 @@
+
+{
+  "name": "Hello World PWA",
+  "short_name": "Hello PWA",
+  "start_url": "/hello-world-pwa/",
+  "scope": "/hello-world-pwa/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "description": "My first iPhone PWA"
+}
