@@ -5,66 +5,198 @@
   <meta charset="UTF-8">
   <meta name="viewport"
         content="width=device-width, initial-scale=1">
-
-  <title>Hello World PWA</title>
   <meta name="theme-color" content="#ffffff">
-
   <meta name="apple-mobile-web-app-capable"
         content="yes">
   <meta name="apple-mobile-web-app-title"
         content="Hello PWA">
+
+  <title>Hello World PWA</title>
 
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="icon.svg">
   <link rel="apple-touch-icon" href="icon-180.png">
 
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f8fafc;
-      color: #172554;
-      text-align: center;
-      padding: 80px 20px;
+    * {
+      box-sizing: border-box;
     }
 
-    button {
-      background: #172554;
+    body {
+      margin: 0;
+      padding: 50px 24px;
+      background: #0f172a;
+      color: white;
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+
+    .card {
+      background: #1e293b;
+      border-radius: 20px;
+      padding: 24px;
+      max-width: 420px;
+      margin: 30px auto;
+    }
+
+    h1 {
+      font-size: 26px;
+    }
+
+    p {
+      color: #94a3b8;
+    }
+
+    button, select {
+      background: #334155;
       color: white;
       border: none;
       border-radius: 12px;
-      padding: 16px 32px;
-      font-size: 18px;
+      padding: 14px 20px;
+      font-size: 16px;
     }
 
-    #count {
-      font-size: 48px;
-      font-weight: bold;
+    #playBtn {
+      background: #6366f1;
+      min-width: 130px;
+      margin: 20px 0;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: #818cf8;
+    }
+
+    .times {
+      display: flex;
+      justify-content: space-between;
+      color: #94a3b8;
+      font-size: 13px;
     }
   </style>
 </head>
 
 <body>
-  <h1>Hello World! 👋</h1>
-  <p>My first interactive PWA</p>
+  <h1>🎧 Sleep Story Player</h1>
+  <p>My first PWA audio player</p>
 
-  <div id="count">0</div>
-  <button onclick="increment()">Count +1</button>
+  <div class="card">
+    <h2>Sample Story</h2>
+    <p>Audio Player Test</p>
+
+    <audio id="audio" preload="metadata"
+      src="https://actions.google.com/sounds/v1/ambiences/rain_on_roof.ogg">
+    </audio>
+
+    <button id="playBtn">▶ Play</button>
+
+    <input id="progress" type="range"
+           min="0" max="100" value="0">
+
+    <div class="times">
+      <span id="currentTime">0:00</span>
+      <span id="duration">0:00</span>
+    </div>
+
+    <p>Playback Speed</p>
+    <select id="speed">
+      <option value="0.75">0.75x</option>
+      <option value="1" selected>1x</option>
+      <option value="1.25">1.25x</option>
+    </select>
+  </div>
 
   <script>
-    let count = Number(
-      localStorage.getItem("count") || 0
+    const audio = document.getElementById("audio");
+    const playBtn = document.getElementById("playBtn");
+    const progress = document.getElementById("progress");
+    const speed = document.getElementById("speed");
+
+    const savedTime = Number(
+      localStorage.getItem("audioTime") || 0
     );
 
-    document.getElementById("count")
-      .textContent = count;
+    const savedSpeed = Number(
+      localStorage.getItem("audioSpeed") || 1
+    );
 
-    function increment() {
-      count++;
-      localStorage.setItem("count", count);
+    speed.value = String(savedSpeed);
+    audio.playbackRate = savedSpeed;
 
-      document.getElementById("count")
-        .textContent = count;
+    function formatTime(seconds) {
+      if (!Number.isFinite(seconds)) return "0:00";
+
+      const m = Math.floor(seconds / 60);
+      const s = Math.floor(seconds % 60);
+
+      return m + ":" + String(s).padStart(2, "0");
     }
+
+    audio.addEventListener("loadedmetadata", () => {
+      if (Number.isFinite(audio.duration)) {
+        audio.currentTime = Math.min(
+          savedTime,
+          Math.max(0, audio.duration - 0.1)
+        );
+
+        document.getElementById("duration")
+          .textContent = formatTime(audio.duration);
+      }
+    });
+
+    playBtn.addEventListener("click", async () => {
+      if (audio.paused) {
+        try {
+          await audio.play();
+        } catch (error) {
+          alert("Audio could not be played.");
+        }
+      } else {
+        audio.pause();
+      }
+    });
+
+    audio.addEventListener("play", () => {
+      playBtn.textContent = "⏸ Pause";
+    });
+
+    audio.addEventListener("pause", () => {
+      playBtn.textContent = "▶ Play";
+    });
+
+    audio.addEventListener("timeupdate", () => {
+      const duration = audio.duration;
+
+      if (Number.isFinite(duration) && duration > 0) {
+        progress.value =
+          (audio.currentTime / duration) * 100;
+      }
+
+      document.getElementById("currentTime")
+        .textContent = formatTime(audio.currentTime);
+
+      localStorage.setItem(
+        "audioTime",
+        String(audio.currentTime)
+      );
+    });
+
+    progress.addEventListener("input", () => {
+      if (Number.isFinite(audio.duration)) {
+        audio.currentTime =
+          (Number(progress.value) / 100) *
+          audio.duration;
+      }
+    });
+
+    speed.addEventListener("change", () => {
+      audio.playbackRate = Number(speed.value);
+
+      localStorage.setItem(
+        "audioSpeed",
+        speed.value
+      );
+    });
 
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("./sw.js");
