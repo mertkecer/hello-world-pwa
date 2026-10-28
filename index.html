@@ -10,7 +10,6 @@
         content="yes">
   <meta name="apple-mobile-web-app-title"
         content="Hello PWA">
-
   <title>Sleep Story Player</title>
 
   <link rel="manifest" href="manifest.json">
@@ -23,217 +22,215 @@
 
     body {
       margin: 0;
-      padding: 60px 24px;
+      padding: 45px 20px;
       background: #0f172a;
-      color: white;
+      color: #ffffff;
       font-family: Arial, sans-serif;
+    }
+
+    h1, .subtitle {
       text-align: center;
+    }
+
+    h1 { font-size: 27px; }
+
+    .subtitle {
+      color: #94a3b8;
     }
 
     .card {
       background: #1e293b;
       border-radius: 20px;
       padding: 24px;
-      max-width: 420px;
+      max-width: 450px;
       margin: 30px auto;
     }
 
-    h1 { font-size: 26px; }
-    p { color: #94a3b8; }
+    label {
+      display: block;
+      margin-bottom: 10px;
+      color: #cbd5e1;
+    }
 
-    button, select {
+    textarea {
+      width: 100%;
+      min-height: 175px;
+      padding: 15px;
+      border: 1px solid #475569;
+      border-radius: 12px;
+      background: #0f172a;
+      color: white;
+      font-size: 16px;
+      resize: vertical;
+    }
+
+    select {
+      width: 100%;
+      padding: 13px;
+      border-radius: 10px;
       background: #334155;
       color: white;
       border: none;
+      font-size: 16px;
+      margin-bottom: 20px;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    button {
+      flex: 1;
+      padding: 15px 10px;
+      border: none;
       border-radius: 12px;
-      padding: 14px 20px;
+      color: white;
+      background: #6366f1;
       font-size: 16px;
     }
 
-    #playBtn {
-      background: #6366f1;
-      min-width: 130px;
-      margin: 20px 0;
+    #stopBtn {
+      background: #475569;
     }
 
-    input[type="range"] {
-      width: 100%;
-      accent-color: #818cf8;
-    }
-
-    .times {
-      display: flex;
-      justify-content: space-between;
+    #status {
       color: #94a3b8;
+      text-align: center;
       font-size: 13px;
-    }
-
-    #message {
-      font-size: 13px;
+      margin-top: 20px;
     }
   </style>
 </head>
 
 <body>
-  <h1>🎧 Sleep Story Player</h1>
-  <p>My first PWA audio player</p>
+  <h1>🎙️ Sleep Story Studio</h1>
+  <p class="subtitle">Your first AI narration test</p>
 
   <div class="card">
-    <h2>Rainy Night 🌧️</h2>
-    <p>Offline Audio Test</p>
+    <label for="story">Story Text</label>
 
-    <audio id="audio"
-           src="rain.wav"
-           preload="auto">
-    </audio>
+    <textarea id="story">King's Landing...
+A city of gold, ambition, and whispered secrets.
 
-    <button id="playBtn">▶ Play</button>
+I remember the days when we fought for this kingdom.
 
-    <input id="progress"
-           type="range"
-           min="0" max="100" value="0">
+Ned Stark stood beside me, and the world seemed simpler then.
 
-    <div class="times">
-      <span id="currentTime">0:00</span>
-      <span id="duration">0:00</span>
-    </div>
+But a crown is a heavy thing.
 
-    <p>Playback Speed</p>
+And sometimes, in the quiet of the night, I wonder whether we truly won anything at all.</textarea>
 
-    <select id="speed">
-      <option value="0.75">0.75x</option>
-      <option value="1" selected>1x</option>
-      <option value="1.25">1.25x</option>
+    <label for="voice">English Narrator</label>
+    <select id="voice">
+      <option value="">Default English Voice</option>
     </select>
 
-    <p id="message">Ready to play</p>
+    <label for="speed">Narration Speed</label>
+    <select id="speed">
+      <option value="0.7">0.7x - Very Slow</option>
+      <option value="0.85" selected>0.85x - Sleep Mode</option>
+      <option value="1">1x - Normal</option>
+    </select>
+
+    <div class="buttons">
+      <button id="playBtn">▶ Speak</button>
+      <button id="stopBtn">■ Stop</button>
+    </div>
+
+    <p id="status">Ready to narrate</p>
   </div>
 
   <script>
-    const audio =
-      document.getElementById("audio");
-    const playBtn =
-      document.getElementById("playBtn");
-    const progress =
-      document.getElementById("progress");
-    const speed =
-      document.getElementById("speed");
-    const message =
-      document.getElementById("message");
+    const synth = window.speechSynthesis;
+    const story = document.getElementById("story");
+    const voiceSelect = document.getElementById("voice");
+    const speed = document.getElementById("speed");
+    const status = document.getElementById("status");
 
-    const savedSpeed = Number(
-      localStorage.getItem("audioSpeed") || 1
-    );
+    let voices = [];
 
-    let savedTime = Number(
-      localStorage.getItem("audioTime") || 0
-    );
+    function loadVoices() {
+      voices = synth.getVoices().filter(
+        v => v.lang.toLowerCase().startsWith("en")
+      );
 
-    function formatTime(seconds) {
-      if (!Number.isFinite(seconds)) {
-        return "0:00";
+      voiceSelect.innerHTML = "";
+
+      if (voices.length === 0) {
+        const option = document.createElement("option");
+        option.textContent = "Default English Voice";
+        option.value = "";
+        voiceSelect.appendChild(option);
+        return;
       }
 
-      const m = Math.floor(seconds / 60);
-      const s = Math.floor(seconds % 60);
-      return m + ":" +
-        String(s).padStart(2, "0");
+      voices.forEach((voice, index) => {
+        const option = document.createElement("option");
+        option.value = String(index);
+        option.textContent =
+          voice.name + " (" + voice.lang + ")";
+        voiceSelect.appendChild(option);
+      });
     }
 
-    speed.value = String(savedSpeed);
-    audio.playbackRate = savedSpeed;
+    loadVoices();
 
-    audio.addEventListener(
-      "loadedmetadata", () => {
-        const duration = audio.duration;
+    if ("onvoiceschanged" in synth) {
+      synth.onvoiceschanged = loadVoices;
+    }
 
-        if (Number.isFinite(duration)) {
-          audio.currentTime = Math.min(
-            Math.max(savedTime, 0),
-            Math.max(duration - 0.1, 0)
-          );
+    document.getElementById("playBtn")
+      .addEventListener("click", () => {
+        synth.cancel();
 
-          document.getElementById(
-            "duration"
-          ).textContent = formatTime(duration);
+        const text = story.value.trim();
+
+        if (!text) {
+          status.textContent = "Enter some text first.";
+          return;
         }
-      }
-    );
 
-    playBtn.addEventListener(
-      "click", async () => {
-        if (audio.paused) {
-          try {
-            await audio.play();
-            message.textContent = "Playing";
-          } catch (error) {
-            message.textContent =
-              "Audio error: " + error.message;
+        const utterance =
+          new SpeechSynthesisUtterance(text);
+
+        utterance.lang = "en-GB";
+        utterance.rate = Number(speed.value);
+        utterance.pitch = 0.85;
+
+        const selected = voices[
+          Number(voiceSelect.value)
+        ];
+
+        if (selected) {
+          utterance.voice = selected;
+          utterance.lang = selected.lang;
+        }
+
+        utterance.onstart = () => {
+          status.textContent = "Narrating...";
+        };
+
+        utterance.onend = () => {
+          status.textContent = "Narration finished.";
+        };
+
+        utterance.onerror = (event) => {
+          if (event.error !== "canceled") {
+            status.textContent =
+              "Speech error: " + event.error;
           }
-        } else {
-          audio.pause();
-        }
-      }
-    );
+        };
 
-    audio.addEventListener("play", () => {
-      playBtn.textContent = "⏸ Pause";
-    });
+        synth.speak(utterance);
+      });
 
-    audio.addEventListener("pause", () => {
-      playBtn.textContent = "▶ Play";
-    });
-
-    audio.addEventListener("ended", () => {
-      savedTime = 0;
-      localStorage.setItem("audioTime", "0");
-      progress.value = 0;
-      message.textContent = "Finished";
-    });
-
-    audio.addEventListener(
-      "timeupdate", () => {
-        if (
-          Number.isFinite(audio.duration) &&
-          audio.duration > 0
-        ) {
-          progress.value =
-            audio.currentTime /
-            audio.duration * 100;
-        }
-
-        document.getElementById(
-          "currentTime"
-        ).textContent =
-          formatTime(audio.currentTime);
-
-        localStorage.setItem(
-          "audioTime",
-          String(audio.currentTime)
-        );
-      }
-    );
-
-    progress.addEventListener("input", () => {
-      if (Number.isFinite(audio.duration)) {
-        audio.currentTime =
-          Number(progress.value) / 100 *
-          audio.duration;
-      }
-    });
-
-    speed.addEventListener("change", () => {
-      audio.playbackRate = Number(speed.value);
-      localStorage.setItem(
-        "audioSpeed",
-        speed.value
-      );
-    });
-
-    audio.addEventListener("error", () => {
-      message.textContent =
-        "Could not load rain.wav";
-    });
+    document.getElementById("stopBtn")
+      .addEventListener("click", () => {
+        synth.cancel();
+        status.textContent = "Stopped.";
+      });
 
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("./sw.js");
