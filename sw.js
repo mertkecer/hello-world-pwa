@@ -1,5 +1,5 @@
 
-const CACHE_NAME = "hello-pwa-v4";
+const CACHE_NAME = "hello-pwa-v5";
 
 const FILES = [
   "./",
@@ -17,7 +17,6 @@ self.addEventListener("install", (event) => {
       cache.addAll(FILES)
     )
   );
-
   self.skipWaiting();
 });
 
@@ -27,8 +26,8 @@ self.addEventListener("activate", (event) => {
       caches.keys().then((keys) =>
         Promise.all(
           keys
-            .filter((key) => key !== CACHE_NAME)
-            .map((key) => caches.delete(key))
+            .filter(key => key !== CACHE_NAME)
+            .map(key => caches.delete(key))
         )
       ),
       self.clients.claim()
@@ -47,9 +46,7 @@ self.addEventListener("fetch", (event) => {
 
   event.respondWith(
     caches.match(event.request).then(
-      (cached) => {
-        return cached || fetch(event.request);
-      }
+      cached => cached || fetch(event.request)
     )
   );
 });
