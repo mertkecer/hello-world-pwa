@@ -46,5 +46,24 @@
 <body>
   <h1>Hello World! 👋</h1>
   <p>My first PWA</p>
+  <p id="status">Checking offline support...</p>
+
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", async () => {
+        try {
+          await navigator.serviceWorker.register("./sw.js");
+
+          document.getElementById("status")
+            .textContent = "Offline support enabled!";
+        } catch (error) {
+          document.getElementById("status")
+            .textContent = "Offline setup failed.";
+
+          console.error(error);
+        }
+      });
+    }
+  </script>
 </body>
 </html>
